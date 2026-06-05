@@ -213,10 +213,43 @@ html, body {
     font-weight: 600;
     font-size: 0.75rem;
     color: var(--text);
-    justify-content: flex-start;
+    justify-content: space-between;
     padding-left: 10px;
+    padding-right: 6px;
     text-align: left;
     word-break: break-word;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+}
+
+.employee-name {
+    line-height: 1.2;
+}
+
+.employee-hours {
+    font-size: 0.65rem;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 10px;
+    background: var(--bg);
+    color: var(--text-light);
+}
+
+.employee-hours.hours-ok {
+    background: var(--pomeriggio-light);
+    color: var(--pomeriggio-text);
+}
+
+.employee-hours.hours-warning {
+    background: var(--riposo-light);
+    color: var(--riposo-text);
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
 }
 
 .schedule-cell.shift-cell {

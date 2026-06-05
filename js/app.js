@@ -177,7 +177,14 @@ class TurniApp {
         
         // Employee rows
         this.data.employees.forEach(employee => {
-            html += `<div class="schedule-cell employee-cell">${employee}</div>`;
+            // Calculate total hours for this employee this week
+            const weekHours = this.calculateWeekHours(employee);
+            const hoursClass = weekHours > 40 ? 'hours-warning' : (weekHours > 0 ? 'hours-ok' : '');
+            
+            html += `<div class="schedule-cell employee-cell">
+                <span class="employee-name">${employee}</span>
+                <span class="employee-hours ${hoursClass}" title="Ore settimanali">${weekHours > 0 ? weekHours + 'h' : ''}</span>
+            </div>`;
             
             for (let i = 0; i < 7; i++) {
                 const date = new Date(this.currentWeekStart);
@@ -206,6 +213,58 @@ class TurniApp {
         table.querySelectorAll('.shift-cell').forEach(cell => {
             cell.addEventListener('click', () => this.openShiftModal(cell));
         });
+    }
+
+    calculateWeekHours(employee) {
+        let totalMinutes = 0;
+        
+        for (let i = 0; i < 7; i++) {
+            const date = new Date(this.currentWeekStart);
+            date.setDate(date.getDate() + i);
+            const dateStr = this.formatDate(date);
+            const key = `${employee}_${dateStr}`;
+            const shift = this.data.schedule[key];
+            
+            if (shift && shift.label) {
+                const hours = this.parseShiftHours(shift.label);
+                totalMinutes += hours;
+            }
+        }
+        
+        // Convert to hours and round to 1 decimal
+        const totalHours = Math.round(totalMinutes / 60 * 10) / 10;
+        return totalHours;
+    }
+
+    parseShiftHours(shiftLabel) {
+        // Skip non-time entries
+        const skipLabels = ['RIPOSO', 'FERIE', 'MALATTIA', 'PERMESSO'];
+        if (skipLabels.includes(shiftLabel.toUpperCase())) {
+            return 0;
+        }
+        
+        // Try to parse time range like "7:00 - 12:00" or "7:30 - 13:30" or "7 - 12"
+        const timePattern = /(\d{1,2})[:\.]?(\d{0,2})\s*[-–]\s*(\d{1,2})[:\.]?(\d{0,2})/;
+        const match = shiftLabel.match(timePattern);
+        
+        if (match) {
+            const startHour = parseInt(match[1]);
+            const startMin = parseInt(match[2]) || 0;
+            const endHour = parseInt(match[3]);
+            const endMin = parseInt(match[4]) || 0;
+            
+            let startMinutes = startHour * 60 + startMin;
+            let endMinutes = endHour * 60 + endMin;
+            
+            // Handle overnight shifts (e.g., 22:00 - 06:00)
+            if (endMinutes < startMinutes) {
+                endMinutes += 24 * 60;
+            }
+            
+            return endMinutes - startMinutes;
+        }
+        
+        return 0;
     }
 
     renderShiftOptions() {
@@ -498,6 +557,11 @@ class TurniApp {
             if (cell.classList.contains('header-cell')) {
                 cell.style.cssText += 'background: #6366f1; color: white; font-weight: 600;';
             } else if (cell.classList.contains('employee-cell')) {
+                // Remove hours badge for export - keep only employee name
+                const hoursEl = cell.querySelector('.employee-hours');
+                if (hoursEl) hoursEl.remove();
+                const nameEl = cell.querySelector('.employee-name');
+                if (nameEl) cell.textContent = nameEl.textContent;
                 cell.style.cssText += 'background: #f1f5f9; font-weight: 600; justify-content: flex-start; padding-left: 10px;';
             } else if (cell.classList.contains('mattina')) {
                 cell.style.cssText += 'background: #fef3c7; color: #92400e; font-weight: 600;';
