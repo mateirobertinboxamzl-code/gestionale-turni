@@ -26,7 +26,17 @@ class TurniApp {
         const saved = localStorage.getItem('turniApp');
         if (saved) {
             try {
-                return JSON.parse(saved);
+                const data = JSON.parse(saved);
+                // Migrate old data: replace "sera" with "spezzato"
+                if (data.shifts && data.shifts.sera && !data.shifts.spezzato) {
+                    data.shifts.spezzato = ['7:00 - 12:00 / 14:00 - 18:00', '8:00 - 12:00 / 15:00 - 19:00'];
+                    delete data.shifts.sera;
+                }
+                // Ensure spezzato exists
+                if (data.shifts && !data.shifts.spezzato) {
+                    data.shifts.spezzato = ['7:00 - 12:00 / 14:00 - 18:00', '8:00 - 12:00 / 15:00 - 19:00'];
+                }
+                return data;
             } catch (e) {
                 return this.getDefaultData();
             }
@@ -279,6 +289,11 @@ class TurniApp {
         const pomeriggioContainer = document.getElementById('shiftsPomeriggio');
         const spezzatoContainer = document.getElementById('shiftsSpezzato');
         
+        // Ensure all shift categories exist
+        if (!this.data.shifts.mattina) this.data.shifts.mattina = [];
+        if (!this.data.shifts.pomeriggio) this.data.shifts.pomeriggio = [];
+        if (!this.data.shifts.spezzato) this.data.shifts.spezzato = [];
+        
         mattinaContainer.innerHTML = this.data.shifts.mattina
             .map(s => `<button class="shift-btn mattina" data-shift="${s}" data-type="mattina">${s}</button>`)
             .join('');
@@ -414,6 +429,13 @@ class TurniApp {
     renderPresets() {
         ['mattina', 'pomeriggio', 'spezzato'].forEach(category => {
             const container = document.getElementById(`preset${category.charAt(0).toUpperCase() + category.slice(1)}`);
+            if (!container) return;
+            
+            // Ensure category exists in data
+            if (!this.data.shifts[category]) {
+                this.data.shifts[category] = [];
+            }
+            
             container.innerHTML = this.data.shifts[category]
                 .map(shift => `
                     <div class="preset-item ${category}">
@@ -431,11 +453,18 @@ class TurniApp {
 
     addPreset(category) {
         const input = document.querySelector(`.add-preset input[data-category="${category}"]`);
+        if (!input) return;
+        
         const value = input.value.trim();
         
         if (!value) {
             this.showToast('Inserisci un orario');
             return;
+        }
+        
+        // Ensure category exists
+        if (!this.data.shifts[category]) {
+            this.data.shifts[category] = [];
         }
         
         if (this.data.shifts[category].includes(value)) {
