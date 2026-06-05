@@ -1,4 +1,4 @@
-const CACHE_NAME = 'turni-app-v2';
+const CACHE_NAME = 'turni-app-v3';
 const urlsToCache = [
     './',
     './index.html',
