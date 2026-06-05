@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Genera Icone PWA</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; }
+        canvas { border: 1px solid #ccc; margin: 10px; }
+        .icons { display: flex; flex-wrap: wrap; gap: 10px; }
+        button { padding: 10px 20px; margin: 10px 0; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>Generatore Icone PWA</h1>
+    <p>Clicca il pulsante per generare e scaricare tutte le icone.</p>
+    <button onclick="generateAll()">Genera e Scarica Tutte le Icone</button>
+    <div class="icons" id="icons"></div>
+
+    <script>
+        const sizes = [72, 96, 128, 144, 152, 192, 384, 512];
+        
+        function drawIcon(ctx, size) {
+            // Background gradient
+            const gradient = ctx.createLinearGradient(0, 0, size, size);
+            gradient.addColorStop(0, '#6366f1');
+            gradient.addColorStop(1, '#4f46e5');
+            
+            // Rounded rect background
+            const radius = size * 0.2;
+            ctx.fillStyle = gradient;
+            ctx.beginPath();
+            ctx.roundRect(0, 0, size, size, radius);
+            ctx.fill();
+            
+            // Scale factor
+            const s = size / 512;
+            
+            // Calendar outline
+            ctx.strokeStyle = 'white';
+            ctx.lineWidth = 24 * s;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            
+            // Calendar body
+            const calRadius = 24 * s;
+            ctx.beginPath();
+            ctx.roundRect(96 * s, 128 * s, 320 * s, 288 * s, calRadius);
+            ctx.stroke();
+            
+            // Horizontal line
+            ctx.beginPath();
+            ctx.moveTo(96 * s, 200 * s);
+            ctx.lineTo(416 * s, 200 * s);
+            ctx.stroke();
+            
+            // Top hooks
+            ctx.beginPath();
+            ctx.moveTo(176 * s, 88 * s);
+            ctx.lineTo(176 * s, 152 * s);
+            ctx.stroke();
+            
+            ctx.beginPath();
+            ctx.moveTo(336 * s, 88 * s);
+            ctx.lineTo(336 * s, 152 * s);
+            ctx.stroke();
+            
+            // Colored dots (shifts)
+            const dotRadius = 24 * s;
+            const dots = [
+                { x: 176, y: 280, color: '#fbbf24' },
+                { x: 256, y: 280, color: '#34d399' },
+                { x: 336, y: 280, color: '#60a5fa' },
+                { x: 176, y: 360, color: '#34d399' },
+                { x: 256, y: 360, color: '#60a5fa' },
+                { x: 336, y: 360, color: '#fbbf24' }
+            ];
+            
+            dots.forEach(dot => {
+                ctx.fillStyle = dot.color;
+                ctx.beginPath();
+                ctx.arc(dot.x * s, dot.y * s, dotRadius, 0, Math.PI * 2);
+                ctx.fill();
+            });
+        }
+        
+        function generateAll() {
+            sizes.forEach(size => {
+                const canvas = document.createElement('canvas');
+                canvas.width = size;
+                canvas.height = size;
+                const ctx = canvas.getContext('2d');
+                
+                drawIcon(ctx, size);
+                
+                // Download
+                const link = document.createElement('a');
+                link.download = `icon-${size}.png`;
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+            });
+            
+            alert('Icone generate! Salvale nella cartella "icons".');
+        }
+        
+        // Show preview
+        window.onload = function() {
+            const container = document.getElementById('icons');
+            sizes.forEach(size => {
+                const canvas = document.createElement('canvas');
+                canvas.width = size;
+                canvas.height = size;
+                const ctx = canvas.getContext('2d');
+                drawIcon(ctx, size);
+                
+                const wrapper = document.createElement('div');
+                wrapper.innerHTML = `<p>${size}x${size}</p>`;
+                wrapper.appendChild(canvas);
+                container.appendChild(wrapper);
+            });
+        };
+    </script>
+</body>
+</html>
