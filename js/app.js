@@ -208,7 +208,13 @@ class TurniApp {
                 
                 if (shift) {
                     cellClass += ` ${shift.type}`;
-                    content = shift.label;
+                    // Format spezzato shifts on two lines
+                    if (shift.label.includes('/')) {
+                        const parts = shift.label.split('/').map(p => p.trim());
+                        content = parts.join('<br>');
+                    } else {
+                        content = shift.label;
+                    }
                 } else {
                     cellClass += ' empty';
                 }
@@ -604,7 +610,7 @@ class TurniApp {
             } else if (cell.classList.contains('pomeriggio')) {
                 cell.style.cssText += 'background: #d1fae5; color: #065f46; font-weight: 600;';
             } else if (cell.classList.contains('spezzato')) {
-                cell.style.cssText += 'background: #fae8ff; color: #86198f; font-weight: 600;';
+                cell.style.cssText += 'background: #fae8ff; color: #86198f; font-weight: 600; flex-direction: column; font-size: 0.75rem; line-height: 1.4;';
             } else if (cell.classList.contains('riposo')) {
                 cell.style.cssText += 'background: #fee2e2; color: #991b1b; font-weight: 600;';
             } else if (cell.classList.contains('ferie')) {

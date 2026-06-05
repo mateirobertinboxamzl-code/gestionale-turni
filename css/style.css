@@ -289,6 +289,9 @@ html, body {
     background: var(--spezzato-light);
     color: var(--spezzato-text);
     font-weight: 600;
+    line-height: 1.3;
+    flex-direction: column;
+    font-size: 0.7rem;
 }
 
 .shift-cell.riposo {
