@@ -93,14 +93,9 @@ class TurniApp {
             if (e.key === 'Enter') this.addEmployee();
         });
 
-        // Add presets
+        // Add presets with time inputs
         document.querySelectorAll('.btn-add-preset').forEach(btn => {
-            btn.addEventListener('click', (e) => this.addPreset(e.target.dataset.category));
-        });
-        document.querySelectorAll('.add-preset input').forEach(input => {
-            input.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') this.addPreset(input.dataset.category);
-            });
+            btn.addEventListener('click', (e) => this.addPresetFromTime(e.target.dataset.category));
         });
 
         // Data management
@@ -457,15 +452,44 @@ class TurniApp {
         });
     }
 
-    addPreset(category) {
-        const input = document.querySelector(`.add-preset input[data-category="${category}"]`);
-        if (!input) return;
+    formatTime(timeValue) {
+        // Convert "07:00" to "7:00" (remove leading zero from hour)
+        if (!timeValue) return '';
+        const [hours, minutes] = timeValue.split(':');
+        const h = parseInt(hours);
+        return `${h}:${minutes}`;
+    }
+
+    addPresetFromTime(category) {
+        const container = document.querySelector(`.add-preset-time[data-category="${category}"]`);
+        if (!container) return;
         
-        const value = input.value.trim();
+        let value = '';
         
-        if (!value) {
-            this.showToast('Inserisci un orario');
-            return;
+        if (category === 'spezzato') {
+            // Get both time ranges for spezzato
+            const start1 = container.querySelector('.time-start-1').value;
+            const end1 = container.querySelector('.time-end-1').value;
+            const start2 = container.querySelector('.time-start-2').value;
+            const end2 = container.querySelector('.time-end-2').value;
+            
+            if (!start1 || !end1 || !start2 || !end2) {
+                this.showToast('Compila tutti gli orari');
+                return;
+            }
+            
+            value = `${this.formatTime(start1)} - ${this.formatTime(end1)} / ${this.formatTime(start2)} - ${this.formatTime(end2)}`;
+        } else {
+            // Get single time range
+            const start = container.querySelector('.time-start').value;
+            const end = container.querySelector('.time-end').value;
+            
+            if (!start || !end) {
+                this.showToast('Compila entrambi gli orari');
+                return;
+            }
+            
+            value = `${this.formatTime(start)} - ${this.formatTime(end)}`;
         }
         
         // Ensure category exists
@@ -482,7 +506,6 @@ class TurniApp {
         this.saveData();
         this.renderPresets();
         this.renderShiftOptions();
-        input.value = '';
         this.showToast('Turno aggiunto!');
     }
 

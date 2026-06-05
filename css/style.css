@@ -705,15 +705,73 @@ html, body {
     font-size: 0.85rem;
 }
 
+.add-preset-time {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    background: var(--bg);
+    padding: 12px;
+    border-radius: 10px;
+}
+
+.time-inputs {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.time-inputs span {
+    color: var(--text-light);
+    font-weight: 500;
+}
+
+.time-inputs input[type="time"] {
+    padding: 8px 10px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 0.9rem;
+    background: white;
+    flex: 1;
+    max-width: 100px;
+}
+
+.spezzato-inputs .time-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.spezzato-inputs .time-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--spezzato);
+    min-width: 20px;
+}
+
+.spezzato-inputs input[type="time"] {
+    padding: 8px 10px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 0.9rem;
+    background: white;
+    flex: 1;
+    max-width: 90px;
+}
+
 .btn-add-preset {
     background: var(--primary);
     color: white;
     border: none;
-    width: 36px;
-    height: 36px;
+    padding: 10px 16px;
     border-radius: 8px;
     cursor: pointer;
-    font-size: 1.2rem;
+    font-size: 0.85rem;
+    font-weight: 500;
+    transition: background 0.2s;
+}
+
+.btn-add-preset:hover {
+    background: var(--primary-dark);
 }
 
 /* Data Actions */

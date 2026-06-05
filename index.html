@@ -146,25 +146,44 @@
                     <div class="preset-section">
                         <h4>🌅 Turni Mattina</h4>
                         <div class="preset-list" id="presetMattina"></div>
-                        <div class="add-preset">
-                            <input type="text" placeholder="es. 7:00 - 12:00" data-category="mattina">
-                            <button class="btn-add-preset" data-category="mattina">+</button>
+                        <div class="add-preset-time" data-category="mattina">
+                            <div class="time-inputs">
+                                <input type="time" class="time-start" value="07:00">
+                                <span>→</span>
+                                <input type="time" class="time-end" value="12:00">
+                            </div>
+                            <button class="btn-add-preset" data-category="mattina">+ Aggiungi</button>
                         </div>
                     </div>
                     <div class="preset-section">
                         <h4>☀️ Turni Pomeriggio</h4>
                         <div class="preset-list" id="presetPomeriggio"></div>
-                        <div class="add-preset">
-                            <input type="text" placeholder="es. 14:00 - 18:00" data-category="pomeriggio">
-                            <button class="btn-add-preset" data-category="pomeriggio">+</button>
+                        <div class="add-preset-time" data-category="pomeriggio">
+                            <div class="time-inputs">
+                                <input type="time" class="time-start" value="14:00">
+                                <span>→</span>
+                                <input type="time" class="time-end" value="18:00">
+                            </div>
+                            <button class="btn-add-preset" data-category="pomeriggio">+ Aggiungi</button>
                         </div>
                     </div>
                     <div class="preset-section">
                         <h4>⏰ Turni Spezzato</h4>
                         <div class="preset-list" id="presetSpezzato"></div>
-                        <div class="add-preset">
-                            <input type="text" placeholder="es. 7:00 - 12:00 / 14:00 - 18:00" data-category="spezzato">
-                            <button class="btn-add-preset" data-category="spezzato">+</button>
+                        <div class="add-preset-time spezzato-inputs" data-category="spezzato">
+                            <div class="time-row">
+                                <span class="time-label">1°</span>
+                                <input type="time" class="time-start-1" value="07:00">
+                                <span>→</span>
+                                <input type="time" class="time-end-1" value="12:00">
+                            </div>
+                            <div class="time-row">
+                                <span class="time-label">2°</span>
+                                <input type="time" class="time-start-2" value="14:00">
+                                <span>→</span>
+                                <input type="time" class="time-end-2" value="18:00">
+                            </div>
+                            <button class="btn-add-preset" data-category="spezzato">+ Aggiungi</button>
                         </div>
                     </div>
                 </div>
