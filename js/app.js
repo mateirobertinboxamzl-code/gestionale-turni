@@ -16,7 +16,7 @@ class TurniApp {
             shifts: {
                 mattina: ['7:00 - 12:00', '7:30 - 12:00', '7:30 - 13:00', '8:00 - 12:00', '8:30 - 14:00'],
                 pomeriggio: ['14:00 - 18:00', '14:00 - 21:30', '15:00 - 21:30'],
-                sera: ['18:00 - 21:30', '18:00 - 22:00']
+                spezzato: ['7:00 - 12:00 / 14:00 - 18:00', '8:00 - 12:00 / 15:00 - 19:00']
             },
             schedule: {}
         };
@@ -243,34 +243,41 @@ class TurniApp {
             return 0;
         }
         
-        // Try to parse time range like "7:00 - 12:00" or "7:30 - 13:30" or "7 - 12"
-        const timePattern = /(\d{1,2})[:\.]?(\d{0,2})\s*[-–]\s*(\d{1,2})[:\.]?(\d{0,2})/;
-        const match = shiftLabel.match(timePattern);
+        let totalMinutes = 0;
         
-        if (match) {
-            const startHour = parseInt(match[1]);
-            const startMin = parseInt(match[2]) || 0;
-            const endHour = parseInt(match[3]);
-            const endMin = parseInt(match[4]) || 0;
+        // Split by "/" for spezzato shifts (e.g., "7:00 - 12:00 / 14:00 - 18:00")
+        const parts = shiftLabel.split('/');
+        
+        parts.forEach(part => {
+            // Try to parse time range like "7:00 - 12:00" or "7:30 - 13:30" or "7 - 12"
+            const timePattern = /(\d{1,2})[:\.]?(\d{0,2})\s*[-–]\s*(\d{1,2})[:\.]?(\d{0,2})/;
+            const match = part.match(timePattern);
             
-            let startMinutes = startHour * 60 + startMin;
-            let endMinutes = endHour * 60 + endMin;
-            
-            // Handle overnight shifts (e.g., 22:00 - 06:00)
-            if (endMinutes < startMinutes) {
-                endMinutes += 24 * 60;
+            if (match) {
+                const startHour = parseInt(match[1]);
+                const startMin = parseInt(match[2]) || 0;
+                const endHour = parseInt(match[3]);
+                const endMin = parseInt(match[4]) || 0;
+                
+                let startMinutes = startHour * 60 + startMin;
+                let endMinutes = endHour * 60 + endMin;
+                
+                // Handle overnight shifts (e.g., 22:00 - 06:00)
+                if (endMinutes < startMinutes) {
+                    endMinutes += 24 * 60;
+                }
+                
+                totalMinutes += endMinutes - startMinutes;
             }
-            
-            return endMinutes - startMinutes;
-        }
+        });
         
-        return 0;
+        return totalMinutes;
     }
 
     renderShiftOptions() {
         const mattinaContainer = document.getElementById('shiftsMattina');
         const pomeriggioContainer = document.getElementById('shiftsPomeriggio');
-        const seraContainer = document.getElementById('shiftsSera');
+        const spezzatoContainer = document.getElementById('shiftsSpezzato');
         
         mattinaContainer.innerHTML = this.data.shifts.mattina
             .map(s => `<button class="shift-btn mattina" data-shift="${s}" data-type="mattina">${s}</button>`)
@@ -280,8 +287,8 @@ class TurniApp {
             .map(s => `<button class="shift-btn pomeriggio" data-shift="${s}" data-type="pomeriggio">${s}</button>`)
             .join('');
             
-        seraContainer.innerHTML = this.data.shifts.sera
-            .map(s => `<button class="shift-btn sera" data-shift="${s}" data-type="sera">${s}</button>`)
+        spezzatoContainer.innerHTML = this.data.shifts.spezzato
+            .map(s => `<button class="shift-btn spezzato" data-shift="${s}" data-type="spezzato">${s}</button>`)
             .join('');
     }
 
@@ -338,7 +345,7 @@ class TurniApp {
     getShiftType(button) {
         if (button.classList.contains('mattina')) return 'mattina';
         if (button.classList.contains('pomeriggio')) return 'pomeriggio';
-        if (button.classList.contains('sera')) return 'sera';
+        if (button.classList.contains('spezzato')) return 'spezzato';
         if (button.classList.contains('riposo')) return 'riposo';
         if (button.classList.contains('ferie')) return 'ferie';
         if (button.classList.contains('malattia')) return 'malattia';
@@ -405,7 +412,7 @@ class TurniApp {
 
     // Settings - Presets
     renderPresets() {
-        ['mattina', 'pomeriggio', 'sera'].forEach(category => {
+        ['mattina', 'pomeriggio', 'spezzato'].forEach(category => {
             const container = document.getElementById(`preset${category.charAt(0).toUpperCase() + category.slice(1)}`);
             container.innerHTML = this.data.shifts[category]
                 .map(shift => `
@@ -567,8 +574,8 @@ class TurniApp {
                 cell.style.cssText += 'background: #fef3c7; color: #92400e; font-weight: 600;';
             } else if (cell.classList.contains('pomeriggio')) {
                 cell.style.cssText += 'background: #d1fae5; color: #065f46; font-weight: 600;';
-            } else if (cell.classList.contains('sera')) {
-                cell.style.cssText += 'background: #dbeafe; color: #1e40af; font-weight: 600;';
+            } else if (cell.classList.contains('spezzato')) {
+                cell.style.cssText += 'background: #fae8ff; color: #86198f; font-weight: 600;';
             } else if (cell.classList.contains('riposo')) {
                 cell.style.cssText += 'background: #fee2e2; color: #991b1b; font-weight: 600;';
             } else if (cell.classList.contains('ferie')) {
@@ -596,7 +603,7 @@ class TurniApp {
         const legendItems = [
             { color: '#fbbf24', label: 'Mattina' },
             { color: '#34d399', label: 'Pomeriggio' },
-            { color: '#60a5fa', label: 'Sera' },
+            { color: '#d946ef', label: 'Spezzato' },
             { color: '#f87171', label: 'Riposo' }
         ];
         

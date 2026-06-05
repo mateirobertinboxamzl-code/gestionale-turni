@@ -13,9 +13,9 @@
     --pomeriggio: #34d399;
     --pomeriggio-light: #d1fae5;
     --pomeriggio-text: #065f46;
-    --sera: #60a5fa;
-    --sera-light: #dbeafe;
-    --sera-text: #1e40af;
+    --spezzato: #d946ef;
+    --spezzato-light: #fae8ff;
+    --spezzato-text: #86198f;
     --riposo: #f87171;
     --riposo-light: #fee2e2;
     --riposo-text: #991b1b;
@@ -285,9 +285,9 @@ html, body {
     font-weight: 600;
 }
 
-.shift-cell.sera {
-    background: var(--sera-light);
-    color: var(--sera-text);
+.shift-cell.spezzato {
+    background: var(--spezzato-light);
+    color: var(--spezzato-text);
     font-weight: 600;
 }
 
@@ -467,10 +467,10 @@ html, body {
     border-color: var(--pomeriggio);
 }
 
-.shift-btn.sera {
-    background: var(--sera-light);
-    color: var(--sera-text);
-    border-color: var(--sera);
+.shift-btn.spezzato {
+    background: var(--spezzato-light);
+    color: var(--spezzato-text);
+    border-color: var(--spezzato);
 }
 
 .shift-btn.riposo {
@@ -676,9 +676,9 @@ html, body {
     color: var(--pomeriggio-text);
 }
 
-.preset-item.sera {
-    background: var(--sera-light);
-    color: var(--sera-text);
+.preset-item.spezzato {
+    background: var(--spezzato-light);
+    color: var(--spezzato-text);
 }
 
 .preset-item button {
