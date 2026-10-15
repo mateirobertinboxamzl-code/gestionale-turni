@@ -246,16 +246,169 @@ class TurniApp {
                 }
                 
                 const indicatorsHtml = indicators ? `<div class="shift-indicators">${indicators}</div>` : '';
-                html += `<div class="${cellClass}" data-employee="${employee}" data-date="${dateStr}">${indicatorsHtml}${content}</div>`;
+                const noteData = shift?.note ? `data-note="${this.escapeHtml(shift.note)}"` : '';
+                const hasFixed = fixedShift ? 'data-has-fixed="true"' : '';
+                html += `<div class="${cellClass}" data-employee="${employee}" data-date="${dateStr}" ${noteData} ${hasFixed}><div class="long-press-indicator"></div>${indicatorsHtml}${content}</div>`;
             }
         });
         
         table.innerHTML = html;
         
-        // Add click events to shift cells
+        // Add events to shift cells
         table.querySelectorAll('.shift-cell').forEach(cell => {
-            cell.addEventListener('click', () => this.openShiftModal(cell));
+            // Click to open modal
+            cell.addEventListener('click', (e) => {
+                // Don't open modal if long press just completed
+                if (cell.dataset.longPressComplete) {
+                    delete cell.dataset.longPressComplete;
+                    return;
+                }
+                this.openShiftModal(cell);
+            });
+            
+            // Tooltip for notes - mouse hover
+            cell.addEventListener('mouseenter', (e) => this.showTooltip(cell, e));
+            cell.addEventListener('mouseleave', () => this.hideTooltip());
+            cell.addEventListener('mousemove', (e) => this.moveTooltip(e));
+            
+            // Long press for mobile - 3 seconds to toggle fixed
+            cell.addEventListener('touchstart', (e) => this.startLongPress(cell, e), { passive: true });
+            cell.addEventListener('touchend', () => this.endLongPress(cell));
+            cell.addEventListener('touchmove', () => this.cancelLongPress(cell));
+            cell.addEventListener('touchcancel', () => this.cancelLongPress(cell));
+            
+            // Long press for desktop - mouse
+            cell.addEventListener('mousedown', (e) => this.startLongPress(cell, e));
+            cell.addEventListener('mouseup', () => this.endLongPress(cell));
+            cell.addEventListener('mouseleave', () => this.cancelLongPress(cell));
         });
+    }
+    
+    escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+    
+    // Tooltip functions
+    showTooltip(cell, event) {
+        const note = cell.dataset.note;
+        if (!note) return;
+        
+        const tooltip = document.getElementById('shiftTooltip');
+        tooltip.textContent = note;
+        tooltip.classList.add('visible');
+        this.moveTooltip(event);
+    }
+    
+    moveTooltip(event) {
+        const tooltip = document.getElementById('shiftTooltip');
+        if (!tooltip.classList.contains('visible')) return;
+        
+        const x = event.clientX || (event.touches && event.touches[0]?.clientX) || 0;
+        const y = event.clientY || (event.touches && event.touches[0]?.clientY) || 0;
+        
+        // Position tooltip above cursor
+        tooltip.style.left = `${x}px`;
+        tooltip.style.top = `${y - tooltip.offsetHeight - 10}px`;
+        
+        // Keep tooltip on screen
+        const rect = tooltip.getBoundingClientRect();
+        if (rect.right > window.innerWidth) {
+            tooltip.style.left = `${window.innerWidth - rect.width - 10}px`;
+        }
+        if (rect.top < 0) {
+            tooltip.style.top = `${y + 20}px`;
+        }
+    }
+    
+    hideTooltip() {
+        const tooltip = document.getElementById('shiftTooltip');
+        tooltip.classList.remove('visible');
+    }
+    
+    // Long press functions for toggle fixed shift
+    startLongPress(cell, event) {
+        // Only if cell has a shift assigned
+        if (cell.classList.contains('empty')) return;
+        
+        const employee = cell.dataset.employee;
+        const dateStr = cell.dataset.date;
+        const key = `${employee}_${dateStr}`;
+        const shift = this.data.schedule[key];
+        
+        if (!shift) return;
+        
+        // Show tooltip on long touch
+        if (event.type === 'touchstart' && cell.dataset.note) {
+            setTimeout(() => {
+                if (cell.classList.contains('long-pressing')) {
+                    const touch = event.touches[0];
+                    this.showTooltip(cell, { clientX: touch.clientX, clientY: touch.clientY });
+                }
+            }, 500);
+        }
+        
+        cell.classList.add('long-pressing');
+        
+        this.longPressTimer = setTimeout(() => {
+            this.toggleFixedShift(cell);
+            cell.dataset.longPressComplete = 'true';
+        }, 3000);
+    }
+    
+    endLongPress(cell) {
+        this.cancelLongPress(cell);
+        this.hideTooltip();
+    }
+    
+    cancelLongPress(cell) {
+        if (this.longPressTimer) {
+            clearTimeout(this.longPressTimer);
+            this.longPressTimer = null;
+        }
+        cell.classList.remove('long-pressing');
+    }
+    
+    toggleFixedShift(cell) {
+        const employee = cell.dataset.employee;
+        const dateStr = cell.dataset.date;
+        const date = new Date(dateStr);
+        const dayOfWeek = date.getDay();
+        const fixedKey = `${employee}_${dayOfWeek}`;
+        const key = `${employee}_${dateStr}`;
+        const shift = this.data.schedule[key];
+        
+        if (!shift) return;
+        
+        cell.classList.remove('long-pressing');
+        
+        if (!this.data.fixedShifts) {
+            this.data.fixedShifts = {};
+        }
+        
+        if (this.data.fixedShifts[fixedKey]) {
+            // Remove fixed shift
+            delete this.data.fixedShifts[fixedKey];
+            this.saveData();
+            this.renderSchedule();
+            this.showToast('Turno fisso rimosso 📌');
+        } else {
+            // Add fixed shift
+            this.data.fixedShifts[fixedKey] = { label: shift.label, type: shift.type };
+            this.saveData();
+            this.renderSchedule();
+            this.showToast('Turno fissato! 📌');
+        }
+        
+        // Visual feedback
+        setTimeout(() => {
+            const newCell = document.querySelector(`.shift-cell[data-employee="${employee}"][data-date="${dateStr}"]`);
+            if (newCell) {
+                newCell.classList.add('fixed-feedback');
+                setTimeout(() => newCell.classList.remove('fixed-feedback'), 500);
+            }
+        }, 50);
     }
 
     calculateWeekHours(employee) {
