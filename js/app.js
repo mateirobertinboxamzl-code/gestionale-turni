@@ -18,7 +18,9 @@ class TurniApp {
                 pomeriggio: ['14:00 - 18:00', '14:00 - 21:30', '15:00 - 21:30'],
                 spezzato: ['7:00 - 12:00 / 14:00 - 18:00', '8:00 - 12:00 / 15:00 - 19:00']
             },
-            schedule: {}
+            schedule: {},
+            // Turni fissi: chiave = "employee_dayOfWeek" (0-6, 0=domenica), valore = {label, type}
+            fixedShifts: {}
         };
     }
 
@@ -35,6 +37,10 @@ class TurniApp {
                 // Ensure spezzato exists
                 if (data.shifts && !data.shifts.spezzato) {
                     data.shifts.spezzato = ['7:00 - 12:00 / 14:00 - 18:00', '8:00 - 12:00 / 15:00 - 19:00'];
+                }
+                // Ensure fixedShifts exists
+                if (!data.fixedShifts) {
+                    data.fixedShifts = {};
                 }
                 return data;
             } catch (e) {
@@ -71,6 +77,7 @@ class TurniApp {
         // Shift modal
         document.getElementById('btnCloseModal').addEventListener('click', () => this.closeModal('modalShift'));
         document.getElementById('btnRemoveShift').addEventListener('click', () => this.removeShift());
+        document.getElementById('btnRemoveFixed').addEventListener('click', () => this.removeFixedShift());
         document.getElementById('btnAddCustomShift').addEventListener('click', () => this.addCustomShift());
 
         // Modal overlay click to close
@@ -195,14 +202,30 @@ class TurniApp {
                 const date = new Date(this.currentWeekStart);
                 date.setDate(date.getDate() + i);
                 const dateStr = this.formatDate(date);
+                const dayOfWeek = date.getDay(); // 0 = Sunday, 1 = Monday, etc.
                 const key = `${employee}_${dateStr}`;
-                const shift = this.data.schedule[key];
+                const fixedKey = `${employee}_${dayOfWeek}`;
+                
+                let shift = this.data.schedule[key];
+                const fixedShift = this.data.fixedShifts ? this.data.fixedShifts[fixedKey] : null;
+                
+                // Apply fixed shift if no manual shift exists
+                if (!shift && fixedShift) {
+                    shift = { ...fixedShift, isFromFixed: true };
+                }
                 
                 let cellClass = 'schedule-cell shift-cell';
                 let content = '';
+                let indicators = '';
                 
                 if (shift) {
                     cellClass += ` ${shift.type}`;
+                    
+                    // Check if this is a fixed shift
+                    if (fixedShift && shift.label === fixedShift.label) {
+                        cellClass += ' is-fixed';
+                    }
+                    
                     // Format spezzato shifts on two lines
                     if (shift.label.includes('/')) {
                         const parts = shift.label.split('/').map(p => p.trim());
@@ -210,11 +233,20 @@ class TurniApp {
                     } else {
                         content = shift.label;
                     }
+                    
+                    // Add indicators for note and fixed
+                    if (shift.note) {
+                        indicators += '<span class="indicator-note" title="Ha una nota">📝</span>';
+                    }
+                    if (fixedShift && shift.label === fixedShift.label) {
+                        indicators += '<span class="indicator-fixed" title="Turno fisso">📌</span>';
+                    }
                 } else {
                     cellClass += ' empty';
                 }
                 
-                html += `<div class="${cellClass}" data-employee="${employee}" data-date="${dateStr}">${content}</div>`;
+                const indicatorsHtml = indicators ? `<div class="shift-indicators">${indicators}</div>` : '';
+                html += `<div class="${cellClass}" data-employee="${employee}" data-date="${dateStr}">${indicatorsHtml}${content}</div>`;
             }
         });
         
@@ -233,8 +265,16 @@ class TurniApp {
             const date = new Date(this.currentWeekStart);
             date.setDate(date.getDate() + i);
             const dateStr = this.formatDate(date);
+            const dayOfWeek = date.getDay();
             const key = `${employee}_${dateStr}`;
-            const shift = this.data.schedule[key];
+            const fixedKey = `${employee}_${dayOfWeek}`;
+            
+            let shift = this.data.schedule[key];
+            
+            // Use fixed shift if no manual shift
+            if (!shift && this.data.fixedShifts && this.data.fixedShifts[fixedKey]) {
+                shift = this.data.fixedShifts[fixedKey];
+            }
             
             if (shift && shift.label) {
                 const hours = this.parseShiftHours(shift.label);
@@ -317,7 +357,30 @@ class TurniApp {
         const modalTitle = document.getElementById('modalTitle');
         const date = new Date(this.selectedCell.date);
         const dayName = date.toLocaleDateString('it-IT', { weekday: 'long' });
+        const dayOfWeek = date.getDay();
         modalTitle.textContent = `${this.selectedCell.employee} - ${dayName}`;
+        
+        // Get current shift data
+        const key = `${this.selectedCell.employee}_${this.selectedCell.date}`;
+        const shift = this.data.schedule[key];
+        const fixedKey = `${this.selectedCell.employee}_${dayOfWeek}`;
+        const fixedShift = this.data.fixedShifts ? this.data.fixedShifts[fixedKey] : null;
+        
+        // Populate note field
+        const noteField = document.getElementById('shiftNote');
+        noteField.value = shift?.note || '';
+        
+        // Set fixed checkbox
+        const fixedCheckbox = document.getElementById('fixedShift');
+        fixedCheckbox.checked = false;
+        
+        // Show/hide remove fixed button
+        const removeFixedBtn = document.getElementById('btnRemoveFixed');
+        if (fixedShift) {
+            removeFixedBtn.classList.add('show');
+        } else {
+            removeFixedBtn.classList.remove('show');
+        }
         
         this.openModal('modalShift');
     }
@@ -326,11 +389,33 @@ class TurniApp {
         if (!this.selectedCell) return;
         
         const key = `${this.selectedCell.employee}_${this.selectedCell.date}`;
+        const note = document.getElementById('shiftNote').value.trim();
+        const isFixed = document.getElementById('fixedShift').checked;
+        
+        // Save the shift
         this.data.schedule[key] = { label, type };
+        if (note) {
+            this.data.schedule[key].note = note;
+        }
+        
+        // Handle fixed shift
+        if (isFixed) {
+            const date = new Date(this.selectedCell.date);
+            const dayOfWeek = date.getDay();
+            const fixedKey = `${this.selectedCell.employee}_${dayOfWeek}`;
+            
+            if (!this.data.fixedShifts) {
+                this.data.fixedShifts = {};
+            }
+            this.data.fixedShifts[fixedKey] = { label, type };
+            this.showToast('Turno assegnato e fissato! 📌');
+        } else {
+            this.showToast('Turno assegnato!');
+        }
+        
         this.saveData();
         this.renderSchedule();
         this.closeModal('modalShift');
-        this.showToast('Turno assegnato!');
     }
 
     removeShift() {
@@ -342,6 +427,22 @@ class TurniApp {
         this.renderSchedule();
         this.closeModal('modalShift');
         this.showToast('Turno rimosso');
+    }
+
+    removeFixedShift() {
+        if (!this.selectedCell) return;
+        
+        const date = new Date(this.selectedCell.date);
+        const dayOfWeek = date.getDay();
+        const fixedKey = `${this.selectedCell.employee}_${dayOfWeek}`;
+        
+        if (this.data.fixedShifts && this.data.fixedShifts[fixedKey]) {
+            delete this.data.fixedShifts[fixedKey];
+            this.saveData();
+            this.renderSchedule();
+            this.closeModal('modalShift');
+            this.showToast('Turno fisso rimosso');
+        }
     }
 
     addCustomShift() {

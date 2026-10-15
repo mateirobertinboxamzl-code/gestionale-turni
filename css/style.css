@@ -1054,3 +1054,117 @@ html, body {
 .loading-text {
     font-size: 1rem;
 }
+
+/* Shift Extras - Note e Turno Fisso */
+.shift-extras {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+}
+
+.note-section {
+    margin-bottom: 12px;
+}
+
+.note-section label {
+    display: block;
+    font-size: 0.85rem;
+    color: var(--text-light);
+    margin-bottom: 6px;
+}
+
+.note-section textarea {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 0.9rem;
+    resize: vertical;
+    min-height: 60px;
+    font-family: inherit;
+}
+
+.fixed-shift-section {
+    margin-bottom: 12px;
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    padding: 10px;
+    background: var(--bg);
+    border-radius: 8px;
+}
+
+.checkbox-label input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+}
+
+.shift-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 16px;
+}
+
+.shift-actions button {
+    flex: 1;
+}
+
+.btn-remove-fixed {
+    padding: 12px;
+    background: var(--ferie-light);
+    color: var(--ferie-text);
+    border: 1px solid var(--ferie);
+    border-radius: 10px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    display: none;
+}
+
+.btn-remove-fixed.show {
+    display: block;
+}
+
+/* Indicatori turno nella cella */
+.shift-cell .shift-indicators {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    display: flex;
+    gap: 2px;
+    font-size: 0.6rem;
+}
+
+.shift-cell .indicator-note,
+.shift-cell .indicator-fixed {
+    width: 14px;
+    height: 14px;
+    border-radius: 3px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.55rem;
+}
+
+.shift-cell .indicator-note {
+    background: rgba(0,0,0,0.1);
+}
+
+.shift-cell .indicator-fixed {
+    background: rgba(99, 102, 241, 0.2);
+    color: var(--primary);
+}
+
+.shift-cell {
+    position: relative;
+}
+
+/* Stile per turni fissi */
+.shift-cell.is-fixed {
+    box-shadow: inset 0 0 0 2px var(--primary);
+}
