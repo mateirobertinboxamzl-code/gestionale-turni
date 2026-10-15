@@ -264,8 +264,15 @@
     <!-- Toast Notification -->
     <div class="toast" id="toast"></div>
 
-    <!-- Tooltip per note -->
-    <div class="shift-tooltip" id="shiftTooltip"></div>
+    <!-- Popup per note -->
+    <div class="note-popup-overlay" id="notePopupOverlay"></div>
+    <div class="note-popup" id="notePopup">
+        <div class="note-popup-header">
+            <h3>📝 Nota</h3>
+            <button class="note-popup-close" id="notePopupClose">✕</button>
+        </div>
+        <div class="note-popup-content" id="notePopupContent"></div>
+    </div>
 
     <script src="js/app.js"></script>
 </body>

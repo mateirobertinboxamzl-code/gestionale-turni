@@ -73,6 +73,10 @@ class TurniApp {
         document.getElementById('btnRemoveShift').addEventListener('click', () => this.removeShift());
         document.getElementById('btnAddCustomShift').addEventListener('click', () => this.addCustomShift());
 
+        // Note popup
+        document.getElementById('notePopupClose').addEventListener('click', () => this.hideNotePopup());
+        document.getElementById('notePopupOverlay').addEventListener('click', () => this.hideNotePopup());
+
         // Modal overlay click to close
         document.querySelectorAll('.modal-overlay').forEach(overlay => {
             overlay.addEventListener('click', (e) => {
@@ -243,6 +247,13 @@ class TurniApp {
         table.querySelectorAll('.shift-cell').forEach(cell => {
             // Click to open modal
             cell.addEventListener('click', (e) => {
+                // Check if clicked on note icon
+                if (e.target.classList.contains('indicator-note')) {
+                    e.stopPropagation();
+                    this.showNotePopup(cell.dataset.note);
+                    return;
+                }
+                
                 // Don't open modal if long press just completed
                 if (cell.dataset.longPressComplete) {
                     delete cell.dataset.longPressComplete;
@@ -256,19 +267,22 @@ class TurniApp {
                 this.openShiftModal(cell);
             });
             
-            // Tooltip for notes - mouse hover
-            cell.addEventListener('mouseenter', (e) => this.showTooltip(cell, e));
-            cell.addEventListener('mouseleave', () => this.hideTooltip());
-            cell.addEventListener('mousemove', (e) => this.moveTooltip(e));
-            
-            // Long press for mobile - 3 seconds to toggle fixed
-            cell.addEventListener('touchstart', (e) => this.startLongPress(cell, e), { passive: true });
+            // Long press for mobile - 3 seconds to toggle lock
+            cell.addEventListener('touchstart', (e) => {
+                // Don't start long press if touching note icon
+                if (e.target.classList.contains('indicator-note')) return;
+                this.startLongPress(cell, e);
+            }, { passive: true });
             cell.addEventListener('touchend', () => this.endLongPress(cell));
             cell.addEventListener('touchmove', () => this.cancelLongPress(cell));
             cell.addEventListener('touchcancel', () => this.cancelLongPress(cell));
             
             // Long press for desktop - mouse
-            cell.addEventListener('mousedown', (e) => this.startLongPress(cell, e));
+            cell.addEventListener('mousedown', (e) => {
+                // Don't start long press if clicking note icon
+                if (e.target.classList.contains('indicator-note')) return;
+                this.startLongPress(cell, e);
+            });
             cell.addEventListener('mouseup', () => this.endLongPress(cell));
             cell.addEventListener('mouseleave', () => this.cancelLongPress(cell));
         });
@@ -280,44 +294,28 @@ class TurniApp {
         return div.innerHTML;
     }
     
-    // Tooltip functions
-    showTooltip(cell, event) {
-        const note = cell.dataset.note;
+    // Note popup functions
+    showNotePopup(note) {
         if (!note) return;
         
-        const tooltip = document.getElementById('shiftTooltip');
-        tooltip.textContent = note;
-        tooltip.classList.add('visible');
-        this.moveTooltip(event);
+        const popup = document.getElementById('notePopup');
+        const overlay = document.getElementById('notePopupOverlay');
+        const content = document.getElementById('notePopupContent');
+        
+        content.textContent = note;
+        popup.classList.add('visible');
+        overlay.classList.add('visible');
     }
     
-    moveTooltip(event) {
-        const tooltip = document.getElementById('shiftTooltip');
-        if (!tooltip.classList.contains('visible')) return;
+    hideNotePopup() {
+        const popup = document.getElementById('notePopup');
+        const overlay = document.getElementById('notePopupOverlay');
         
-        const x = event.clientX || (event.touches && event.touches[0]?.clientX) || 0;
-        const y = event.clientY || (event.touches && event.touches[0]?.clientY) || 0;
-        
-        // Position tooltip above cursor
-        tooltip.style.left = `${x}px`;
-        tooltip.style.top = `${y - tooltip.offsetHeight - 10}px`;
-        
-        // Keep tooltip on screen
-        const rect = tooltip.getBoundingClientRect();
-        if (rect.right > window.innerWidth) {
-            tooltip.style.left = `${window.innerWidth - rect.width - 10}px`;
-        }
-        if (rect.top < 0) {
-            tooltip.style.top = `${y + 20}px`;
-        }
+        popup.classList.remove('visible');
+        overlay.classList.remove('visible');
     }
     
-    hideTooltip() {
-        const tooltip = document.getElementById('shiftTooltip');
-        tooltip.classList.remove('visible');
-    }
-    
-    // Long press functions for toggle fixed shift
+    // Long press functions for toggle lock shift
     startLongPress(cell, event) {
         // Only if cell has a shift assigned
         if (cell.classList.contains('empty')) return;
@@ -329,16 +327,6 @@ class TurniApp {
         
         if (!shift) return;
         
-        // Show tooltip on long touch
-        if (event.type === 'touchstart' && cell.dataset.note) {
-            setTimeout(() => {
-                if (cell.classList.contains('long-pressing')) {
-                    const touch = event.touches[0];
-                    this.showTooltip(cell, { clientX: touch.clientX, clientY: touch.clientY });
-                }
-            }, 500);
-        }
-        
         cell.classList.add('long-pressing');
         
         this.longPressTimer = setTimeout(() => {
@@ -349,7 +337,6 @@ class TurniApp {
     
     endLongPress(cell) {
         this.cancelLongPress(cell);
-        this.hideTooltip();
     }
     
     cancelLongPress(cell) {

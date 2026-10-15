@@ -1151,30 +1151,96 @@ html, body {
     pointer-events: none;
 }
 
-/* Tooltip per note */
-.shift-tooltip {
+/* Popup per note */
+.note-popup {
     position: fixed;
-    background: var(--text);
-    color: white;
-    padding: 10px 14px;
-    border-radius: 10px;
-    font-size: 0.85rem;
-    max-width: 250px;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: white;
+    padding: 20px;
+    border-radius: 16px;
+    font-size: 0.95rem;
+    max-width: 300px;
+    width: 90%;
     z-index: 2000;
     box-shadow: var(--shadow-lg);
-    pointer-events: none;
-    opacity: 0;
-    transform: translateY(5px);
-    transition: opacity 0.2s, transform 0.2s;
+    display: none;
 }
 
-.shift-tooltip.visible {
-    opacity: 1;
-    transform: translateY(0);
+.note-popup.visible {
+    display: block;
+    animation: popupIn 0.2s ease;
 }
 
-.shift-tooltip::before {
-    content: '📝 ';
+@keyframes popupIn {
+    from { opacity: 0; transform: translate(-50%, -50%) scale(0.9); }
+    to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+
+.note-popup-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.4);
+    z-index: 1999;
+    display: none;
+}
+
+.note-popup-overlay.visible {
+    display: block;
+}
+
+.note-popup-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+}
+
+.note-popup-header h3 {
+    font-size: 1rem;
+    color: var(--text);
+}
+
+.note-popup-close {
+    background: var(--bg);
+    border: none;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    font-size: 1.2rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-light);
+}
+
+.note-popup-close:hover {
+    background: var(--riposo-light);
+    color: var(--riposo-text);
+}
+
+.note-popup-content {
+    color: var(--text);
+    line-height: 1.5;
+}
+
+/* Icona nota cliccabile */
+.shift-cell .indicator-note {
+    background: rgba(0,0,0,0.15);
+    cursor: pointer;
+    transition: transform 0.2s, background 0.2s;
+}
+
+.shift-cell .indicator-note:hover {
+    transform: scale(1.2);
+    background: rgba(0,0,0,0.25);
 }
 
 /* Long press indicator */
